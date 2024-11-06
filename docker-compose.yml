@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: nina-mosquitto-broker
+    ports:
+      - "1883:1883"   # Porta MQTT
+      - "9001:9001"   # Porta WebSockets (opzionale)
+    volumes:
+      - ./Mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./Mosquitto/data:/mosquitto/data
+      - ./Mosquitto/log:/mosquitto/log
+
+  ninamock:
+    build:
+      context: ./NINAMock
+      dockerfile: Dockerfile
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+    container_name: ninamock
+
+  nina_react:
+    build:
+      context: ./nina_react
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80" # Modifica la porta se necessario
+    depends_on:
+      - mosquitto
+      - ninamock
+    restart: unless-stopped
+    container_name: nina_react
